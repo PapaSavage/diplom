@@ -4,9 +4,28 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
   devtools: { enabled: true },
+
   css: ["~/assets/css/null.css", "~/assets/css/main.css"],
   vite: {
     plugins: [tailwindcss()],
+  },
+
+  app: {
+    head: {
+      title: "МедВизор",
+
+      meta: [
+        { charset: "utf-8" },
+
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+      ],
+
+      link: [{ rel: "icon", type: "image/svg", href: "/favicon.svg" }],
+    },
+  },
+
+  devServer: {
+    port: 3002, // Укажите желаемый порт здесь
   },
 
   modules: ["shadcn-nuxt", "@nuxt/eslint", "@nuxt/fonts"],
