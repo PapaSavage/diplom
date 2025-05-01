@@ -21,12 +21,6 @@
           <div class="grid gap-2">
             <div class="flex items-center">
               <Label for="password">Пароль</Label>
-              <a
-                href="/forgot-password"
-                class="ml-auto inline-block text-sm underline"
-              >
-                Забыли пароль?
-              </a>
             </div>
             <Input id="password" type="password" required />
           </div>
@@ -34,7 +28,9 @@
         </div>
         <div class="text-center text-sm">
           Нет аккаунта?
-          <a href="#" class="underline"> Зарегистрироваться </a>
+          <a href="#" class="underline">
+            <NuxtLink to="/signup">Зарегистрироваться</NuxtLink>
+          </a>
         </div>
       </div>
     </div>

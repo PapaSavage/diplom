@@ -36,7 +36,9 @@
         </div>
         <div class="mt-4 text-center text-sm">
           Уже есть аккаунт?
-          <a href="#" class="underline"> Войти </a>
+          <a href="#" class="underline">
+            <NuxtLink to="/login">Войти</NuxtLink>
+          </a>
         </div>
       </CardContent>
     </Card>

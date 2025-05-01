@@ -22,6 +22,8 @@ export default defineNuxtConfig({
 
       link: [{ rel: "icon", type: "image/svg", href: "/favicon.svg" }],
     },
+    pageTransition: { name: "page", mode: "out-in" },
+    layoutTransition: { name: "layout", mode: "out-in" },
   },
 
   devServer: {
