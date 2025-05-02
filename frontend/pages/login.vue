@@ -1,39 +1,64 @@
 <template>
   <div class="w-full h-screen grid lg:grid-cols-2">
     <div class="flex items-center justify-center py-12">
-      <div class="mx-auto grid w-[350px] gap-6">
-        <div class="grid gap-2 text-center">
+      <div class="mx-auto w-[350px] space-y-6">
+        <div class="text-center">
           <h1 class="text-3xl font-bold">Вход</h1>
           <p class="text-balance text-muted-foreground">
             Введите ваш email для входа в аккаунт
           </p>
         </div>
-        <div class="grid gap-4">
-          <div class="grid gap-2">
-            <Label for="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="m@example.com"
-              required
-            />
-          </div>
-          <div class="grid gap-2">
-            <div class="flex items-center">
-              <Label for="password">Пароль</Label>
-            </div>
-            <Input id="password" type="password" required />
-          </div>
-          <Button type="submit" class="w-full"> Войти </Button>
-        </div>
+
+        <form @submit.prevent="onSubmit" class="space-y-4">
+          <FormField
+            name="email"
+            v-slot="{ componentField }"
+            :validate-on-blur="!isFieldDirty"
+          >
+            <FormItem v-auto-animate>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  v-bind="componentField"
+                  required
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          </FormField>
+
+          <FormField
+            name="password"
+            v-slot="{ componentField }"
+            :validate-on-blur="!isFieldDirty"
+          >
+            <FormItem v-auto-animate>
+              <FormLabel>Пароль</FormLabel>
+              <FormControl>
+                <Input
+                  id="password"
+                  type="password"
+                  v-bind="componentField"
+                  required
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          </FormField>
+
+          <Button type="submit" class="w-full">Войти</Button>
+        </form>
+
         <div class="text-center text-sm">
           Нет аккаунта?
-          <a href="#" class="underline">
-            <NuxtLink to="/signup">Зарегистрироваться</NuxtLink>
-          </a>
+          <NuxtLink to="/signup" class="underline">Зарегистрироваться</NuxtLink>
         </div>
       </div>
     </div>
+
     <div class="hidden bg-muted lg:block">
       <img
         src="~/assets/img/med.png"
@@ -45,5 +70,34 @@
     </div>
   </div>
 </template>
-<script lang="ts" setup></script>
-<style></style>
+
+<script setup lang="ts">
+import { vAutoAnimate } from "@formkit/auto-animate/vue";
+
+import { toTypedSchema } from "@vee-validate/zod";
+import { useForm, useField } from "vee-validate";
+import { h } from "vue";
+import * as z from "zod";
+
+// Схема валидации формы
+const formSchema = toTypedSchema(
+  z.object({
+    email: z.string().email({ message: "Введите корректный email" }),
+    password: z
+      .string()
+      .min(6, { message: "Пароль должен быть не менее 6 символов" }),
+  })
+);
+
+// Форма
+const { isFieldDirty, handleSubmit } = useForm({
+  validationSchema: formSchema,
+});
+
+// Обработчик отправки формы
+const onSubmit = handleSubmit((values) => {
+  console.log("Форма успешно заполнена:", values);
+});
+</script>
+
+<style scoped></style>

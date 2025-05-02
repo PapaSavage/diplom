@@ -30,7 +30,7 @@ export default defineNuxtConfig({
     port: 3002, // Укажите желаемый порт здесь
   },
 
-  modules: ["shadcn-nuxt", "@nuxt/eslint", "@nuxt/fonts"],
+  modules: ["shadcn-nuxt", "@nuxt/eslint", "@nuxt/fonts", "nuxt-auth-utils"],
   shadcn: {
     /**
      * Prefix for all the imported component
@@ -45,5 +45,11 @@ export default defineNuxtConfig({
 
   fonts: {
     families: [{ name: "Inter", provider: "google" }],
+  },
+
+  runtimeConfig: {
+    public: {
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URl,
+    },
   },
 });
