@@ -71,7 +71,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts">  
 import { vAutoAnimate } from "@formkit/auto-animate/vue";
 
 import { toTypedSchema } from "@vee-validate/zod";
