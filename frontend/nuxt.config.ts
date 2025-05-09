@@ -30,7 +30,7 @@ export default defineNuxtConfig({
     port: 3002, // Укажите желаемый порт здесь
   },
 
-  modules: ["shadcn-nuxt", "@nuxt/eslint", "@nuxt/fonts", "nuxt-auth-utils"],
+  modules: ["shadcn-nuxt", "@nuxt/eslint", "@nuxt/fonts", "nuxt-auth-sanctum"],
   shadcn: {
     /**
      * Prefix for all the imported component
@@ -50,6 +50,27 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URl,
+    },
+  },
+
+  sanctum: {
+    baseUrl: "http://127.0.0.1:8000", // Laravel API
+
+    mode: "token",
+
+    redirect: {
+      onLogin: "/", // Custom route after successful login
+      onAuthOnly: "/login",
+      onGuestOnly: "/profile",
+    },
+
+    endpoints: {
+      login: "/api/login",
+      logout: "/api/logout",
+    },
+
+    globalMiddleware: {
+      enabled: true,
     },
   },
 });

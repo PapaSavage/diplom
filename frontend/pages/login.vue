@@ -71,7 +71,7 @@
   </div>
 </template>
 
-<script setup lang="ts">  
+<script setup>
 import { vAutoAnimate } from "@formkit/auto-animate/vue";
 
 import { toTypedSchema } from "@vee-validate/zod";
@@ -90,13 +90,19 @@ const formSchema = toTypedSchema(
 );
 
 // Форма
-const { isFieldDirty, handleSubmit } = useForm({
+const { isFieldDirty, handleSubmit, setFieldError, setErrors } = useForm({
   validationSchema: formSchema,
 });
 
+const { login } = useSanctumAuth();
+
 // Обработчик отправки формы
-const onSubmit = handleSubmit((values) => {
-  console.log("Форма успешно заполнена:", values);
+const onSubmit = handleSubmit(async (values) => {
+  try {
+    const response = await login(values);
+  } catch (error) {
+    setFieldError("password", error.data.message);
+  }
 });
 </script>
 

@@ -96,6 +96,7 @@ import { vAutoAnimate } from "@formkit/auto-animate/vue";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm, useSetFieldError } from "vee-validate";
 import * as z from "zod";
+import { toast } from "vue-sonner";
 
 // Схема валидации формы
 const formSchema = toTypedSchema(
@@ -125,6 +126,14 @@ const onSubmit = handleSubmit((values) => {
 
 const { $api } = useNuxtApp();
 
+async function successRegistration() {
+  toast("Вы успешно зарегистрировались", {
+    description: "Сейчас мы вас переадресуем на страницу авторизации",
+  });
+
+  await navigateTo("/login");
+}
+
 async function registerUser(data) {
   try {
     const response = await $api("/register", {
@@ -134,21 +143,12 @@ async function registerUser(data) {
         email: data.email,
         password: data.password,
       }),
-      headers: {
-        "Content-Type": "application/json",
+      onResponse: ({ response }) => {
+        if ([200, 201].includes(response.status)) {
+          successRegistration();
+        }
       },
     });
-
-    // Если регистрация успешна
-    if (response.status === 201 || response.status === 200) {
-      alert("Регистрация прошла успешно!");
-      // Например, редирект на /login
-      return true;
-    }
-
-    // Обработка ошибок, если статус не 200-201
-    const errorData = await response.json();
-    throw new Error(JSON.stringify(errorData));
   } catch (error) {
     handleApiErrors(error.data?.errors);
   }
@@ -156,10 +156,5 @@ async function registerUser(data) {
 
 function handleApiErrors(errors) {
   setErrors(errors);
-  // for (const field in errors) {
-
-  //   const message = errors[field][0];
-  //   useSetFieldError(field, message);
-  // }
 }
 </script>
