@@ -69,7 +69,7 @@ export default defineNuxtConfig({
 
     redirect: {
       onAuthOnly: "/login",
-      onGuestOnly: "/profile",
+      onGuestOnly: "/diagnostics",
       onLogin: "/diagnostics",
     },
     globalMiddleware: {
