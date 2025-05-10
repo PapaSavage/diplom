@@ -78,7 +78,13 @@
             </FormItem>
           </FormField>
 
-          <Button type="submit" class="w-full">Создать аккаунт</Button>
+          <Button type="submit" class="w-full">
+            <span v-if="!isLoading"> Создать аккаунт </span>
+            <div
+              v-if="isLoading"
+              class="animate-spin rounded-full h-5 w-5 border-b-2 border-secondary"
+            ></div>
+          </Button>
         </form>
 
         <div class="mt-4 text-center text-sm">
@@ -126,6 +132,8 @@ const onSubmit = handleSubmit((values) => {
 
 const { $api } = useNuxtApp();
 
+const isLoading = ref(false);
+
 async function successRegistration() {
   toast("Вы успешно зарегистрировались", {
     description: "Сейчас мы вас переадресуем на страницу авторизации",
@@ -135,6 +143,7 @@ async function successRegistration() {
 }
 
 async function registerUser(data) {
+  isLoading.value = true;
   try {
     const response = await $api("/register", {
       method: "POST",
@@ -151,6 +160,8 @@ async function registerUser(data) {
     });
   } catch (error) {
     handleApiErrors(error.data?.errors);
+  } finally {
+    isLoading.value = false; // Скрываем loader
   }
 }
 

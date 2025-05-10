@@ -49,7 +49,13 @@
             </FormItem>
           </FormField>
 
-          <Button type="submit" class="w-full">Войти</Button>
+          <Button type="submit" class="w-full">
+            <span v-if="!isLoading">Войти</span>
+            <div
+              v-if="isLoading"
+              class="animate-spin rounded-full h-5 w-5 border-b-2 border-secondary"
+            ></div>
+          </Button>
         </form>
 
         <div class="text-center text-sm">
@@ -89,6 +95,8 @@ const formSchema = toTypedSchema(
   })
 );
 
+const isLoading = ref(false);
+
 // Форма
 const { isFieldDirty, handleSubmit, setFieldError, setErrors } = useForm({
   validationSchema: formSchema,
@@ -98,12 +106,16 @@ const { login } = useSanctumAuth();
 
 // Обработчик отправки формы
 const onSubmit = handleSubmit(async (values) => {
+  isLoading.value = true;
+
   try {
     const response = await login(values);
   } catch (error) {
     setFieldError("password", error.data.message);
+  } finally {
+    isLoading.value = false; // Скрываем loader
   }
 });
 </script>
 
-<style scoped></style>
+<style></style>

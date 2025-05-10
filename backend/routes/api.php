@@ -1,52 +1,20 @@
 <?php
 
-
-use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Auth\AuthController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::post('/register', function (Request $request) {
-    $request->validate([
-        'name' => 'required|string',
-        'email' => 'required|string|email|unique:users',
-        'password' => 'required|string|min:6',
-    ]);
+Route::post('/register', [AuthController::class, 'register']);
 
 
-    $user = User::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-    ]);
+Route::post('/login', [AuthController::class, 'login']);
 
-    return response()->json($user, 201);
-});
-
-
-Route::post('/login', function (Request $request) {
-    $request->validate([
-        'email' => 'required|string|email',
-        'password' => 'required|string',
-    ]);
-
-    $user = User::where('email', $request->email)->first();
-
-    if (!$user || !Hash::check($request->password, $user->password)) {
-        return response()->json(['message' => 'Неверные авторизационные данные'], 401);
-    }
-
-    $token = $user->createToken('MedVisor')->plainTextToken;
-
-    return response()->json(['token' => $token]);
-});
-
-
+// Route::post('/logout', [AuthController::class, 'logout']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 // Route::middleware('auth:sanctum')->group(function () {
 //     Route::post('/create-order', [OrderCreatingController::class, 'store']);
 

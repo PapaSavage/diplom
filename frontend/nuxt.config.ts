@@ -5,7 +5,11 @@ export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
   devtools: { enabled: true },
 
-  css: ["~/assets/css/null.css", "~/assets/css/main.css"],
+  css: [
+    "~/assets/css/null.css",
+    "~/assets/css/main.css",
+    "~/assets/css/base.scss",
+  ],
   vite: {
     plugins: [tailwindcss()],
   },
@@ -22,8 +26,8 @@ export default defineNuxtConfig({
 
       link: [{ rel: "icon", type: "image/svg", href: "/favicon.svg" }],
     },
-    pageTransition: { name: "page", mode: "out-in" },
     layoutTransition: { name: "layout", mode: "out-in" },
+    pageTransition: { name: "page", mode: "out-in" },
   },
 
   devServer: {
@@ -60,17 +64,13 @@ export default defineNuxtConfig({
 
     redirect: {
       onLogin: "/diagnostics", // Custom route after successful login
-      onAuthOnly: "/login",
-      onGuestOnly: "/diagnostics",
+      onAuthOnly: "/diagnostics", // куда перенаправить, если авторизованный пользователь попробовал зайти на /login
+      onGuestOnly: "/login",
     },
 
     endpoints: {
       login: "/api/login",
       logout: "/api/logout",
-    },
-
-    globalMiddleware: {
-      enabled: true,
     },
   },
 });
