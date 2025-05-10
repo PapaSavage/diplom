@@ -84,6 +84,7 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useForm, useField } from "vee-validate";
 import { h } from "vue";
 import * as z from "zod";
+import { toast } from "vue-sonner";
 
 // Схема валидации формы
 const formSchema = toTypedSchema(
@@ -104,12 +105,19 @@ const { isFieldDirty, handleSubmit, setFieldError, setErrors } = useForm({
 
 const { login } = useSanctumAuth();
 
+async function successAuth() {
+  toast("Вы успешно авторизовались", {
+    description: "Сейчас мы вас переадресуем на страницу авторизации",
+  });
+}
+
 // Обработчик отправки формы
 const onSubmit = handleSubmit(async (values) => {
   isLoading.value = true;
 
   try {
     const response = await login(values);
+    await successAuth();
   } catch (error) {
     setFieldError("password", error.data.message);
   } finally {

@@ -72,7 +72,7 @@ async function logout(data) {
             <DropdownMenuTrigger asChild>
               <SidebarMenuButton>
                 <User />
-                <span class="text-sm">
+                <span v-if="user" class="text-sm">
                   {{ user.name }}
                 </span>
                 <ChevronUp class="ml-auto" />

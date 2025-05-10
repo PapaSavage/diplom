@@ -62,15 +62,18 @@ export default defineNuxtConfig({
 
     mode: "token",
 
-    redirect: {
-      onLogin: "/diagnostics", // Custom route after successful login
-      onAuthOnly: "/diagnostics", // куда перенаправить, если авторизованный пользователь попробовал зайти на /login
-      onGuestOnly: "/login",
-    },
-
     endpoints: {
       login: "/api/login",
       logout: "/api/logout",
+    },
+
+    redirect: {
+      onAuthOnly: "/login",
+      onGuestOnly: "/profile",
+      onLogin: "/diagnostics",
+    },
+    globalMiddleware: {
+      enabled: true,
     },
   },
 });

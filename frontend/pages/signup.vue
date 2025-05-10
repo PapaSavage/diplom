@@ -104,6 +104,12 @@ import { useForm, useSetFieldError } from "vee-validate";
 import * as z from "zod";
 import { toast } from "vue-sonner";
 
+definePageMeta({
+  sanctum: {
+    guestOnly: true,
+  },
+});
+
 // Схема валидации формы
 const formSchema = toTypedSchema(
   z.object({
