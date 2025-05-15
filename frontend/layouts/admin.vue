@@ -8,7 +8,7 @@
           <Separator orientation="vertical" class="mr-2 h-3" />
           <div class="text-sm">{{ activeTitle }}</div>
         </header>
-        <main class="p-2 w-full text-sm">
+        <main class="p-4 w-full text-sm">
           <slot />
           <Toaster />
         </main>

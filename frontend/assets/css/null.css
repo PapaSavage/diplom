@@ -1,5 +1,4 @@
-/* Указываем box sizing */
-*,
+Указываем box sizing *,
 *::before,
 *::after {
   box-sizing: border-box;

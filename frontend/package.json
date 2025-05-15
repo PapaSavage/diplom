@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "sass": "^1.87.0",
-    "shadcn-nuxt": "^2.1.0"
+    "shadcn-nuxt": "^2.1.0",
+    "typescript": "^5.8.3"
   }
 }
