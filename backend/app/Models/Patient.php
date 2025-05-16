@@ -35,4 +35,9 @@ class Patient extends Model
     {
         return $this->belongsTo(User::class, 'owner_id');
     }
+
+    public function medicalImages()
+    {
+        return $this->hasMany(MedicalImage::class, 'patient_id');
+    }
 }

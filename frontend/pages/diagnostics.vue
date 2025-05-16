@@ -1,28 +1,106 @@
 <template>
   <div class="grid grid-cols-4 gap-4">
     <div class="col-span-4 md:col-span-2">
-      <patients-list :global="false" @patient-selected="onPatientSelected" />
+      <patients-list
+        :global="false"
+        :from="'diagnostics'"
+        @patient-selected="onPatientSelected"
+      />
     </div>
     <div class="col-span-4 md:col-span-2" v-if="selectedPatient">
       <Card class="w-full">
         <CardHeader>
-          <CardTitle>Медицинские изображения</CardTitle>
+          <CardTitle>Медицинские обследования</CardTitle>
           <CardDescription
-            >Изображения пациента: {{ selectedPatient.name }}</CardDescription
-          >
+            >Диагностическая информация для пациента
+            <br />
+            <strong>
+              {{ selectedPatient.name }}
+            </strong>
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div v-if="!selectedImage">
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Загрузить изображение
+            </label>
+            <div
+              class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition-colors"
+              @click="$refs.fileInput.click()"
+              @dragover.prevent="onDragOver"
+              @dragleave.prevent="onDragLeave"
+              @drop.prevent="onDrop"
+              :class="{ 'border-blue-500 bg-blue-50': isDragging }"
+            >
+              <input
+                type="file"
+                ref="fileInput"
+                class="hidden"
+                accept="image/*"
+                @change="handleImageUpload"
+              />
+              <div
+                class="mx-auto h-12 w-12 text-gray-400 flex items-center justify-center rounded-full bg-gray-100"
+              >
+                <PlusCircle size="24" />
+              </div>
+              <p class="mt-2 text-sm text-gray-500">
+                Перетащите файл сюда или нажмите, чтобы выбрать
+              </p>
+              <p class="mt-1 text-xs text-gray-400">PNG, JPG до 10MB</p>
+
+              <!-- Информация о загруженном файле -->
+              <div v-if="uploadedFile" class="mt-4 text-left">
+                <div class="flex justify-between text-sm text-gray-800">
+                  <span>Имя файла:</span>
+                  <span>{{ uploadedFile.name }}</span>
+                </div>
+                <div class="flex justify-between text-sm text-gray-800">
+                  <span>Размер:</span>
+                  <span>{{ formatFileSize(uploadedFile.size) }}</span>
+                </div>
+                <div class="flex justify-between text-sm text-gray-800">
+                  <span>Тип:</span>
+                  <span>{{ uploadedFile.type || "Неизвестный тип" }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Превью загруженного изображения -->
+            <div v-if="imagePreviewUrl" class="mt-4">
+              <h4 class="text-sm font-medium text-gray-700 mb-2">
+                Превью изображения:
+              </h4>
+              <div class="w-full max-w-md mx-auto">
+                <img
+                  :src="imagePreviewUrl"
+                  alt="Предварительный просмотр"
+                  class="w-full h-auto rounded-lg shadow-sm"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="flex justify-center items-center min-h-16"
+            v-if="isDiagnosticsLoading"
+          >
+            <div
+              class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"
+            ></div>
+          </div>
+
+          <div v-else-if="diagnosticResults.length == 0">
             <div class="bg-white rounded-lg shadow-sm p-6 text-center">
               <h3 class="text-lg font-medium text-gray-900 mb-2">
-                Нет выбранного изображения
+                Вы ещё не производили диагностику
               </h3>
               <p class="text-gray-500">
-                Выберите изображение для просмотра диагностической информации.
+                Загрузите изображение и запустите диагностику
               </p>
             </div>
           </div>
-          <div v-else>
+          <div v-else-if="selectedImage != null">
             <div
               class="px-6 py-4 border-b border-gray-200 flex justify-between items-center"
             >
@@ -31,7 +109,7 @@
                   Диагностическая информация
                 </h2>
                 <p class="mt-1 text-sm text-gray-500">
-                  Изображение: {{ selectedImage.bodyPart }} ({{
+                  Изображение: ({{
                     new Date(selectedImage.captureDate).toLocaleDateString(
                       "ru-RU"
                     )
@@ -57,6 +135,7 @@
               <div v-if="diagnosis" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div
+                    v-if="selectedImage"
                     class="relative h-64 bg-gray-100 rounded-lg overflow-hidden"
                   >
                     <img
@@ -240,8 +319,20 @@
           </div>
         </CardContent>
         <CardFooter>
-          <Button type="submit" class="w-full mt-4" @click="uploadNewImage">
-            Загрузить новое изображение
+          <Button
+            type="submit"
+            class="w-full mt-4"
+            :disabled="isDiagnosticsUploadProccessingLoading"
+            @click="newDiagnostic"
+          >
+            <span v-if="!isDiagnosticsUploadProccessingLoading">
+              Прозвести новое обследование
+            </span>
+
+            <div
+              v-else
+              class="animate-spin rounded-full h-5 w-5 border-b-2 border-secondary"
+            ></div>
           </Button>
         </CardFooter>
       </Card>
@@ -252,28 +343,67 @@
 <script setup>
 import { ref, computed } from "vue";
 import PatientsList from "@/components/PatientsList";
-import { CheckCircle, AlertCircle, HelpCircle, Award } from "lucide-vue-next";
+import {
+  CheckCircle,
+  AlertCircle,
+  HelpCircle,
+  Award,
+  PlusCircle,
+} from "lucide-vue-next";
+import { toast } from "vue-sonner";
 
 definePageMeta({
   layout: "admin",
 });
 
 const selectedPatient = ref(null);
-const selectedImage = ref(null);
 const diagnosticResults = ref([]);
+const selectedImage = ref(null);
 const similarCases = ref([]);
 
-function onPatientSelected(patient) {
+const isLoading = ref(false);
+const isDiagnosticsLoading = ref(false);
+const isDiagnosticsUploadProccessingLoading = ref(false);
+
+const fileInput = ref(null);
+
+const isDragging = ref(false);
+const uploadedFile = ref(null);
+
+const imagePreviewUrl = ref(null);
+
+const filters = ref(null);
+
+const { $api } = useNuxtApp();
+
+async function onPatientSelected(patient) {
+  if (selectedPatient.value?.id === patient.id) return;
   selectedPatient.value = patient;
-  // Здесь можно передать `patient` в другой компонент или выполнить другую логику
+  await fetchDiagnostics();
 }
 
-const diagnosis = computed(() => {
-  if (!selectedImage.value) return null;
-  return diagnosticResults.value.find(
-    (d) => d.imageId === selectedImage.value.id
-  );
-});
+// const diagnosis = computed(() => {
+//   if (!selectedImage.value) return null;
+//   return diagnosticResults.value.find(
+//     (d) => d.imageId === selectedImage.value.id
+//   );
+// });
+
+async function fetchDiagnostics() {
+  isDiagnosticsLoading.value = true;
+  const id = selectedPatient.value.id;
+  try {
+    const response = await $api(`/medical-images/${id}`, {
+      method: "GET",
+    });
+
+    diagnosticResults.value = response;
+  } catch (error) {
+    console.error("Ошибка при получении пациентов:", error);
+  } finally {
+    isDiagnosticsLoading.value = false;
+  }
+}
 
 function getStatusIcon(status) {
   switch (status) {
@@ -303,7 +433,89 @@ function getConfidenceColor(score) {
   return "text-red-600";
 }
 
-function uploadNewImage() {
-  // Логика загрузки нового изображения
+function onDragOver() {
+  isDragging.value = true;
 }
+
+function onDragLeave() {
+  isDragging.value = false;
+}
+
+function onDrop(event) {
+  isDragging.value = false;
+  const file = event.dataTransfer.files[0];
+  if (file && file.type.startsWith("image/")) {
+    handleImageUpload({ target: { files: [file] } });
+  }
+}
+
+function handleImageUpload(event) {
+  const file = event.target.files[0];
+  if (file && file.type.startsWith("image/")) {
+    uploadedFile.value = file;
+    imagePreviewUrl.value = URL.createObjectURL(file);
+    console.log("Загруженный файл:", file);
+    // Здесь можно добавить логику отправки файла на сервер
+  } else {
+    alert("Пожалуйста, загрузите только изображения (JPG, PNG).");
+  }
+}
+
+async function newDiagnostic() {
+  if (!uploadedFile.value || !selectedPatient.value) {
+    toast.error("Выберите файл и пациента");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("image", uploadedFile.value);
+  formData.append("image_type", "x-ray");
+
+  isDiagnosticsUploadProccessingLoading.value = true;
+
+  try {
+    const response = await $api(
+      `/patients/${selectedPatient.value.id}/diagnostics`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (response.status === 201 && response.data) {
+      await fetchDiagnostics(); // Обновление списка диагностик
+      toast.success("Диагностика отправлена на обработку");
+    } else {
+      toast.warning("Сохранено, но ожидается результат AI");
+    }
+  } catch (error) {
+    console.error("Ошибка при отправке диагностики:", error);
+    toast.error("Не удалось отправить диагностику");
+  } finally {
+    isDiagnosticsUploadProccessingLoading.value = false;
+  }
+}
+
+async function getFilters() {
+  try {
+    const response = await $api(`/medical-images/filters`, {
+      method: "GET",
+    });
+
+    filters = response;
+  } catch (error) {}
+}
+
+// Форматирование размера файла
+function formatFileSize(bytes) {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
+onMounted(() => {
+  getFilters();
+});
 </script>

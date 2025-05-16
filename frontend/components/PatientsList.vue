@@ -3,14 +3,16 @@
     <CardHeader>
       <CardTitle>Список пациентов</CardTitle>
       <CardDescription>Всего пациентов: {{ patients.length }}</CardDescription>
+      <div v-if="from == 'diagnostics'">Выберите пациента для диагностики</div>
     </CardHeader>
 
-    <CardContent>
+    <CardContent class="">
       <Input
         v-model="searchQuery"
         placeholder="Поиск по имени..."
         class="mb-4"
       />
+
       <div v-if="isLoading" class="flex justify-center items-center h-64">
         <div
           class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"
@@ -19,7 +21,7 @@
       <ul
         v-else
         role="list"
-        class="divide-y divide-gray-200 max-h-96 overflow-auto"
+        class="divide-y divide-gray-200 overflow-auto max-h-96"
       >
         <li
           v-for="patient in filteredPatients"
@@ -311,6 +313,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  from: {
+    type: String,
+    default: null,
+  },
 });
 
 const emit = defineEmits(["patient-selected"]);
@@ -341,7 +347,7 @@ const newPatient = ref({
 });
 0;
 
-const { handleSubmit, setFieldError, isFieldDirty, meta } = useForm({
+const { handleSubmit, setFieldError, isFieldDirty, resetForm, meta } = useForm({
   validationSchema: patientSchema,
   initialValues: newPatient.value,
 });
@@ -389,6 +395,8 @@ async function addNewPatient(values) {
           await fetchPatients();
 
           toast("Пациент добавлен");
+
+          resetForm();
 
           newPatient.value = {
             name: "",

@@ -43,11 +43,11 @@ const items = ref([
     url: "/diagnostics",
     icon: Stethoscope,
   },
-  {
-    title: "Новый случай",
-    url: "/new-diagnostic",
-    icon: Plus,
-  },
+  // {
+  //   title: "Новый случай",
+  //   url: "/new-diagnostic",
+  //   icon: Plus,
+  // },
 ]);
 </script>
 

@@ -82,9 +82,9 @@ async function logout(data) {
               side="top"
               class="w-[--reka-popper-anchor-width]"
             >
-              <DropdownMenuItem>
+              <!-- <DropdownMenuItem>
                 <span>Аккаунт</span>
-              </DropdownMenuItem>
+              </DropdownMenuItem> -->
 
               <DropdownMenuItem @click="logout">
                 <span>Выйти</span>
