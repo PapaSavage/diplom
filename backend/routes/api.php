@@ -24,5 +24,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Custom diagnostic route for a patient
     Route::post('patients/{patientId}/diagnostics', [MedicalImageController::class, 'store']);
-    Route::get('medical-images/filters', [MedicalImageController::class, 'filters']);
+    Route::get('/diagnostics/filters', [MedicalImageController::class, 'getFilters']);
 });

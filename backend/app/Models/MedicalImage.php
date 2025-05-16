@@ -11,7 +11,7 @@ class MedicalImage extends Model
     use HasFactory;
 
     // image_types
-    public const Xray = "x-ray";
+    public const Xray = "Рентген лёгких";
 
     protected $fillable = [
         'patient_id',
@@ -24,6 +24,8 @@ class MedicalImage extends Model
         'ai_suggestions',
         'status'
     ];
+
+    protected $appends = ['status_icon_class', 'score', 'bg_score'];
 
     protected static function boot()
     {
@@ -41,8 +43,45 @@ class MedicalImage extends Model
         return $this->belongsTo(Patient::class);
     }
 
+    public function getScoreAttribute()
+    {
+        $rawConfidence = $this->attributes['confidence_score'];
+
+        // Если данные уже являются массивом — используем их напрямую
+        if (is_array($rawConfidence)) {
+            return max(array_values($rawConfidence));
+        }
+
+        // Проверяем, что поле не пустое и является строкой
+        if (!is_string($rawConfidence) || empty($rawConfidence)) {
+            return null; // или 0, или любое другое значение по умолчанию
+        }
+
+        // Декодируем JSON
+        $confidence = json_decode($rawConfidence, true);
+
+        // Проверяем успешность декодирования и тип результата
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($confidence)) {
+            return null;
+        }
+
+        // Возвращаем максимальное значение из массива
+        return max(array_values($confidence));
+    }
+
+    public function getBgScoreAttribute()
+    {
+        if ($this->score >= 85) {
+            return 'bg-green-500';
+        } elseif ($this->score >= 70) {
+            return 'bg-yellow-500';
+        } else {
+            return 'bg-red-500';
+        }
+    }
+
     // Дополнительный метод для удобства
-    public function getStatusIconClass()
+    public function getStatusIconClassAttribute()
     {
         return match ($this->status) {
             'confirmed' => 'text-green-500',
@@ -62,7 +101,7 @@ class MedicalImage extends Model
     {
         return [
             "image_types" => [
-                self::Xray,
+                ["id" => 1, "name" => self::Xray,]
             ]
         ];
     }

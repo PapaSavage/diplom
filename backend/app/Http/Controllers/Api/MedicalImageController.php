@@ -47,8 +47,6 @@ class MedicalImageController extends Controller
 
         $client = new Client();
 
-
-
         try {
             $response = $client->post('http://127.0.0.1:9010/diagnosis', [
                 'multipart' => [
@@ -110,7 +108,7 @@ class MedicalImageController extends Controller
         return response()->json(['message' => 'Image deleted successfully'], 200);
     }
 
-    public function filters()
+    public function getFilters()
     {
         return response()->json(MedicalImage::getImageTypeOptions(), 201);
     }

@@ -8,7 +8,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   const config = useRuntimeConfig();
   const api = $fetch.create({
-    baseURL: config.public.apiBaseUrl as string,
+    baseURL: (config.public.apiBaseUrl + "/api") as string,
     onRequest({ request, options, error }) {
       const token = getAuthTokenFromCookie();
 

@@ -79,6 +79,24 @@
                 />
               </div>
             </div>
+            <div class="my-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Тип обследования</label
+              >
+              <Select v-model="selectedImageType">
+                <SelectTrigger class="w-full">
+                  <SelectValue placeholder="Выберите тип обследования" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="type in filters?.image_types"
+                    :key="type.id"
+                    :value="type.name"
+                    >{{ type.name }}</SelectItem
+                  >
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div
@@ -90,7 +108,7 @@
             ></div>
           </div>
 
-          <div v-else-if="diagnosticResults.length == 0">
+          <div v-if="diagnosticResults.length == 0">
             <div class="bg-white rounded-lg shadow-sm p-6 text-center">
               <h3 class="text-lg font-medium text-gray-900 mb-2">
                 Вы ещё не производили диагностику
@@ -100,221 +118,77 @@
               </p>
             </div>
           </div>
-          <div v-else-if="selectedImage != null">
+          <div class="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3" v-else>
             <div
-              class="px-6 py-4 border-b border-gray-200 flex justify-between items-center"
+              v-for="diagnosticResult in diagnosticResults"
+              @click="handleDiagnosticResultSelect(diagnosticResult)"
+              :key="diagnosticResult.id"
+              class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200 cursor-pointer"
             >
-              <div>
-                <h2 class="text-lg font-medium text-gray-900">
-                  Диагностическая информация
-                </h2>
-                <p class="mt-1 text-sm text-gray-500">
-                  Изображение: ({{
-                    new Date(selectedImage.captureDate).toLocaleDateString(
-                      "ru-RU"
-                    )
-                  }})
-                </p>
-              </div>
-              <div v-if="diagnosis" class="flex items-center space-x-1">
-                <component
-                  :is="getStatusIcon(diagnosis.status)"
-                  size="18"
-                  :class="{
-                    'text-green-500': diagnosis.status === 'confirmed',
-                    'text-red-500': diagnosis.status === 'rejected',
-                    'text-yellow-500': true,
-                  }"
-                />
-                <span class="text-sm font-medium">{{
-                  getStatusText(diagnosis.status)
-                }}</span>
-              </div>
-            </div>
-            <div class="p-6">
-              <div v-if="diagnosis" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div
+                class="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200 cursor-pointer"
+              >
+                <div class="relative h-48 bg-gray-100">
+                  <img
+                    :src="publicUrl + diagnosticResult.image_url"
+                    class="w-full h-full object-cover"
+                  />
                   <div
-                    v-if="selectedImage"
-                    class="relative h-64 bg-gray-100 rounded-lg overflow-hidden"
+                    class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3"
                   >
-                    <img
-                      :src="selectedImage.imageUrl"
-                      :alt="`${selectedImage.bodyPart} - ${selectedImage.imageType}`"
-                      class="w-full h-full object-contain"
-                    />
+                    <span class="text-white text-sm font-medium">{{
+                      diagnosticResult.image_type
+                    }}</span>
                   </div>
-                  <div class="space-y-4">
-                    <div>
-                      <h3 class="text-lg font-medium text-gray-900">Диагноз</h3>
-                      <p class="mt-1 text-xl font-semibold text-[#0070C0]">
-                        {{ diagnosis.condition }}
-                      </p>
-                    </div>
-                    <div>
-                      <div class="flex items-center justify-between">
-                        <h4 class="text-sm font-medium text-gray-500">
-                          Достоверность диагноза
-                        </h4>
-                        <span
-                          :class="getConfidenceColor(diagnosis.confidenceScore)"
-                          class="text-lg font-bold"
-                        >
-                          {{ diagnosis.confidenceScore }}%
-                        </span>
-                      </div>
-                      <div
-                        class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden"
-                      >
-                        <div
-                          :class="{
-                            'bg-green-500': diagnosis.confidenceScore >= 85,
-                            'bg-yellow-500': diagnosis.confidenceScore >= 70,
-                            'bg-red-500': true,
-                          }"
-                          class="h-full"
-                          :style="{ width: `${diagnosis.confidenceScore}%` }"
-                        ></div>
-                      </div>
-                    </div>
-                    <div>
-                      <h4 class="text-sm font-medium text-gray-500">
-                        Обнаруженные признаки
-                      </h4>
-                      <ul class="mt-2 space-y-1">
-                        <li
-                          v-for="(feature, index) in diagnosis.detectedFeatures"
-                          :key="index"
-                          class="flex items-start"
-                        >
-                          <span class="text-[#0070C0] mr-2">•</span>
-                          <span class="text-sm text-gray-700">{{
-                            feature
-                          }}</span>
-                        </li>
-                      </ul>
-                    </div>
+                  <div
+                    class="absolute top-2 right-2 bg-[#0070C0] text-white text-xs rounded-full px-2 py-1"
+                  >
+                    {{ diagnosticResult.image_type }}
                   </div>
                 </div>
-                <div>
-                  <h3 class="text-lg font-medium text-gray-900 mb-3">
-                    ИИ предлагает рассмотреть
-                  </h3>
-                  <div
-                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-                  >
-                    <div
-                      v-for="(suggestion, index) in diagnosis.aiSuggestions"
-                      :key="index"
-                      class="bg-gray-50 p-3 rounded-lg border border-gray-200"
+                <div class="p-3">
+                  <div class="flex items-center text-sm text-gray-500 mb-1">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-calendar mr-1"
                     >
-                      <p class="text-sm font-medium text-gray-900">
-                        {{ suggestion }}
-                      </p>
-                      <div class="mt-2 flex items-center">
-                        <span
-                          class="inline-block h-2 w-2 rounded-full mr-2"
-                          :class="{
-                            'bg-green-500': index === 0,
-                            'bg-yellow-500': index === 1,
-                            'bg-red-500': index === 2,
-                          }"
-                        ></span>
-                        <span class="text-xs text-gray-500">
-                          {{
-                            index === 0
-                              ? "Высокая вероятность"
-                              : index === 1
-                              ? "Средняя вероятность"
-                              : "Низкая вероятность"
-                          }}
-                        </span>
-                      </div>
-                    </div>
+                      <path d="M8 2v4"></path>
+                      <path d="M16 2v4"></path>
+                      <rect width="18" height="18" x="3" y="4" rx="2"></rect>
+                      <path d="M3 10h18"></path></svg
+                    ><span>{{ diagnosticResult.capture_date }}</span>
                   </div>
-                </div>
-                <div v-if="similarCases.length > 0">
-                  <h3 class="text-lg font-medium text-gray-900 mb-3">
-                    Похожие случаи
-                  </h3>
-                  <div
-                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-                  >
-                    <div
-                      v-for="scase in similarCases"
-                      :key="scase.id"
-                      class="border border-gray-200 rounded-lg overflow-hidden"
-                    >
-                      <div class="h-36 bg-gray-100">
-                        <img
-                          :src="scase.imageUrl"
-                          :alt="scase.condition"
-                          class="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div class="p-3">
-                        <p class="text-sm font-medium text-gray-900">
-                          {{ scase.condition }}
-                        </p>
-                        <div class="mt-2 flex items-center justify-between">
-                          <div class="flex items-center">
-                            <Award size="16" class="text-[#0070C0] mr-1" />
-                            <span class="text-xs text-gray-500"
-                              >Совпадение: {{ scase.matchScore }}%</span
-                            >
-                          </div>
-                          <span
-                            class="text-xs font-medium"
-                            :class="getConfidenceColor(scase.confidenceScore)"
-                          >
-                            {{ scase.confidenceScore }}% уверенность
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div v-else>
-                <div class="text-center py-10">
-                  <div
-                    class="mx-auto h-12 w-12 text-gray-400 flex items-center justify-center rounded-full bg-gray-100"
-                  >
-                    <AlertCircle size="24" />
-                  </div>
-                  <h3 class="mt-2 text-sm font-medium text-gray-900">
-                    Нет диагностической информации
-                  </h3>
-                  <p class="mt-1 text-sm text-gray-500">
-                    Для выбранного изображения нет диагностической информации.
-                  </p>
-                  <div class="mt-6">
+
+                  <div class="mt-2 flex justify-end">
                     <button
-                      type="button"
-                      class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#0070C0] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0070C0]"
+                      class="text-[#0070C0] hover:text-blue-700 inline-flex items-center text-sm"
                     >
-                      Провести анализ изображения
+                      Подробнее<svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-chevron-right ml-1"
+                      >
+                        <path d="m9 18 6-6-6-6"></path>
+                      </svg>
                     </button>
                   </div>
                 </div>
               </div>
-            </div>
-            <div
-              v-if="diagnosis"
-              class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-4"
-            >
-              <button
-                type="button"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0070C0]"
-              >
-                Редактировать
-              </button>
-              <button
-                type="button"
-                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#00A99D] hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00A99D]"
-              >
-                Сохранить в карте пациента
-              </button>
             </div>
           </div>
         </CardContent>
@@ -337,6 +211,67 @@
         </CardFooter>
       </Card>
     </div>
+    <!-- <div class="col-span-2"></div> -->
+    <div class="col-span-4" v-if="selectedDiagnostic">
+      <Card class="w-full">
+        <CardHeader>
+          <CardTitle>Диагностическая информация</CardTitle>
+          <CardDescription
+            >Изображение: ({{
+              new Date(selectedDiagnostic.capture_date).toLocaleDateString(
+                "ru-RU"
+              )
+            }})
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div>
+            <div class="p-6">
+              <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="relative bg-gray-100 rounded-lg overflow-hidden">
+                    <img
+                      :src="publicUrl + selectedDiagnostic.image_url"
+                      class="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div class="space-y-4">
+                    <div>
+                      <h3 class="text-lg font-medium text-gray-900">Диагноз</h3>
+                      <p class="mt-1 text-xl font-semibold text-[#0070C0]">
+                        {{ selectedDiagnostic.diagnosis }}
+                      </p>
+                    </div>
+                    <div>
+                      <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-medium text-gray-500">
+                          Достоверность диагноза
+                        </h4>
+                        <span
+                          :class="getConfidenceColor(selectedDiagnostic.score)"
+                          class="text-lg font-bold"
+                        >
+                          {{ selectedDiagnostic.score }}%
+                        </span>
+                      </div>
+                      <div
+                        class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden"
+                      >
+                        <div
+                          :class="selectedDiagnostic.bg_score"
+                          class="h-full"
+                          :style="{ width: `${selectedDiagnostic.score}%` }"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   </div>
 </template>
 
@@ -349,14 +284,18 @@ import {
   HelpCircle,
   Award,
   PlusCircle,
+  Calendar,
 } from "lucide-vue-next";
 import { toast } from "vue-sonner";
 
 definePageMeta({
   layout: "admin",
 });
+const config = useRuntimeConfig();
+const publicUrl = config.public.apiBaseUrl + "/storage/";
 
 const selectedPatient = ref(null);
+const selectedDiagnostic = ref(null);
 const diagnosticResults = ref([]);
 const selectedImage = ref(null);
 const similarCases = ref([]);
@@ -372,22 +311,18 @@ const uploadedFile = ref(null);
 
 const imagePreviewUrl = ref(null);
 
+const selectedImageType = ref(null);
+
 const filters = ref(null);
 
 const { $api } = useNuxtApp();
 
 async function onPatientSelected(patient) {
   if (selectedPatient.value?.id === patient.id) return;
+  selectedDiagnostic.value = null;
   selectedPatient.value = patient;
   await fetchDiagnostics();
 }
-
-// const diagnosis = computed(() => {
-//   if (!selectedImage.value) return null;
-//   return diagnosticResults.value.find(
-//     (d) => d.imageId === selectedImage.value.id
-//   );
-// });
 
 async function fetchDiagnostics() {
   isDiagnosticsLoading.value = true;
@@ -402,28 +337,6 @@ async function fetchDiagnostics() {
     console.error("Ошибка при получении пациентов:", error);
   } finally {
     isDiagnosticsLoading.value = false;
-  }
-}
-
-function getStatusIcon(status) {
-  switch (status) {
-    case "confirmed":
-      return CheckCircle;
-    case "rejected":
-      return AlertCircle;
-    default:
-      return HelpCircle;
-  }
-}
-
-function getStatusText(status) {
-  switch (status) {
-    case "confirmed":
-      return "Подтверждён";
-    case "rejected":
-      return "Отклонён";
-    default:
-      return "Ожидает подтверждения";
   }
 }
 
@@ -454,8 +367,6 @@ function handleImageUpload(event) {
   if (file && file.type.startsWith("image/")) {
     uploadedFile.value = file;
     imagePreviewUrl.value = URL.createObjectURL(file);
-    console.log("Загруженный файл:", file);
-    // Здесь можно добавить логику отправки файла на сервер
   } else {
     alert("Пожалуйста, загрузите только изображения (JPG, PNG).");
   }
@@ -469,7 +380,7 @@ async function newDiagnostic() {
 
   const formData = new FormData();
   formData.append("image", uploadedFile.value);
-  formData.append("image_type", "x-ray");
+  formData.append("image_type", selectedImageType.value);
 
   isDiagnosticsUploadProccessingLoading.value = true;
 
@@ -482,27 +393,30 @@ async function newDiagnostic() {
       }
     );
 
-    if (response.status === 201 && response.data) {
-      await fetchDiagnostics(); // Обновление списка диагностик
-      toast.success("Диагностика отправлена на обработку");
-    } else {
-      toast.warning("Сохранено, но ожидается результат AI");
-    }
+    await fetchDiagnostics();
+
+    selectedDiagnostic.value = response;
+
+    toast.success("Диагностика отправлена на обработку");
   } catch (error) {
     console.error("Ошибка при отправке диагностики:", error);
     toast.error("Не удалось отправить диагностику");
   } finally {
+    uploadedFile.value = null;
+    imagePreviewUrl.value = null;
     isDiagnosticsUploadProccessingLoading.value = false;
   }
 }
 
 async function getFilters() {
   try {
-    const response = await $api(`/medical-images/filters`, {
+    const response = await $api("/diagnostics/filters", {
       method: "GET",
     });
 
-    filters = response;
+    filters.value = response;
+
+    selectedImageType.value = filters.value.image_types[0].name;
   } catch (error) {}
 }
 
@@ -513,6 +427,10 @@ function formatFileSize(bytes) {
   const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
+function handleDiagnosticResultSelect(diagnosticResult) {
+  selectedDiagnostic.value = diagnosticResult;
 }
 
 onMounted(() => {
