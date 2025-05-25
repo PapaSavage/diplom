@@ -106,9 +106,12 @@ const { isFieldDirty, handleSubmit, setFieldError, setErrors } = useForm({
 const { login } = useSanctumAuth();
 
 async function successAuth() {
-  toast("Вы успешно авторизовались", {
+  toast.success("Вы успешно авторизовались", {
     description: "Сейчас мы вас переадресуем на страницу авторизации",
   });
+
+  // Редирект без await
+  navigateTo("/diagnostics");
 }
 
 // Обработчик отправки формы

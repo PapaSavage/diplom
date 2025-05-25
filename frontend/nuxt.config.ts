@@ -3,7 +3,13 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
-  devtools: { enabled: true },
+  devtools: {
+    enabled: true,
+
+    timeline: {
+      enabled: true,
+    },
+  },
 
   css: ["~/assets/css/main.css", "~/assets/css/base.scss"],
   vite: {
@@ -66,7 +72,7 @@ export default defineNuxtConfig({
     redirect: {
       onAuthOnly: "/login",
       onGuestOnly: "/diagnostics",
-      onLogin: "/diagnostics",
+      // onLogin: "/diagnostics",
     },
     globalMiddleware: {
       enabled: true,
