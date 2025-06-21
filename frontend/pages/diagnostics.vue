@@ -225,43 +225,109 @@
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div>
-            <div class="p-6">
-              <div class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="">
+            <div class="space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="relative rounded-lg overflow-hidden">
+                  <div class="flex items-center space-x-2 mb-2">
+                    <Switch v-model="showGradCam" id="showGradCam" />
+                    <Label for="airplane-mode">Показать Grad-CAM</Label>
+                  </div>
                   <div class="relative bg-gray-100 rounded-lg overflow-hidden">
                     <img
-                      :src="publicUrl + selectedDiagnostic.image_url"
-                      class="w-full h-full object-contain"
+                      :src="
+                        publicUrl +
+                        (showGradCam
+                          ? selectedDiagnostic.grad_cam_url
+                          : selectedDiagnostic.image_url)
+                      "
+                      class="w-full h-full object-contain transition-all"
                     />
                   </div>
-                  <div class="space-y-4">
-                    <div>
-                      <h3 class="text-lg font-medium text-gray-900">Диагноз</h3>
-                      <p class="mt-1 text-xl font-semibold text-[#0070C0]">
-                        {{ selectedDiagnostic.diagnosis }}
+                </div>
+                <div class="space-y-4">
+                  <div>
+                    <h3 class="text-lg font-medium text-gray-900">Диагноз</h3>
+                    <p class="mt-1 text-xl font-semibold text-[#0070C0]">
+                      {{ selectedDiagnostic.diagnosis }}
+                    </p>
+                  </div>
+                  <div>
+                    <div class="flex items-center justify-between">
+                      <h4 class="text-sm font-medium text-gray-500">
+                        Достоверность диагноза
+                      </h4>
+                      <span
+                        :class="getConfidenceColor(selectedDiagnostic.score)"
+                        class="text-lg font-bold"
+                      >
+                        {{ selectedDiagnostic.score }}%
+                      </span>
+                    </div>
+                    <div
+                      class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden"
+                    >
+                      <div
+                        :class="selectedDiagnostic.bg_score"
+                        class="h-full"
+                        :style="{ width: `${selectedDiagnostic.score}%` }"
+                      ></div>
+                    </div>
+
+                    <div
+                      className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg"
+                    >
+                      <div className="flex items-center mb-2">
+                        <Info className="w-4 h-4 mr-2 text-amber-600" />
+                        <span className="text-amber-800 font-medium"
+                          >Рекомендация</span
+                        >
+                      </div>
+                      <p className="text-amber-700 text-sm">
+                        Требуется дополнительное обследование и консультация
+                        специалиста
                       </p>
                     </div>
-                    <div>
-                      <div class="flex items-center justify-between">
-                        <h4 class="text-sm font-medium text-gray-500">
-                          Достоверность диагноза
-                        </h4>
-                        <span
-                          :class="getConfidenceColor(selectedDiagnostic.score)"
-                          class="text-lg font-bold"
-                        >
-                          {{ selectedDiagnostic.score }}%
+
+                    <div
+                      class="mt-4 p-4 rounded-lg border transition-all duration-300 text-slate-600"
+                      :class="{
+                        'border-blue-300 bg-blue-50': showGradCam,
+                        'border-gray-200 bg-gray-100': !showGradCam,
+                      }"
+                    >
+                      <div class="flex items-center mb-2">
+                        <!-- <Eye class="w-4 h-4 mr-2" /> -->
+                        <span class="font-bold"
+                          >Grad-CAM Визуализация (<span v-if="showGradCam"
+                            >Активна</span
+                          >
+                          <span v-else>Отключена</span>)
                         </span>
                       </div>
-                      <div
-                        class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden"
-                      >
-                        <div
-                          :class="selectedDiagnostic.bg_score"
-                          class="h-full"
-                          :style="{ width: `${selectedDiagnostic.score}%` }"
-                        ></div>
+                      <p class="text-sm mb-3">
+                        Цветовая карта показывает области, на которые модель
+                        обращает наибольшее внимание при постановке диагноза.
+                        Красные зоны указывают на области с высокой активностью
+                        нейронной сети.
+                      </p>
+                      <div class="flex items-center flex-wrap gap-4">
+                        <div class="flex items-center space-x-2">
+                          <div class="w-4 h-4 bg-red-500 rounded"></div>
+                          <span class="text-sm">Критическая область</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                          <div class="w-4 h-4 bg-orange-500 rounded"></div>
+                          <span class="text-sm">Высокая активность</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                          <div class="w-4 h-4 bg-yellow-500 rounded"></div>
+                          <span class="text-sm">Средняя активность</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                          <div class="w-4 h-4 bg-blue-400 rounded"></div>
+                          <span class="text-sm">Низкая активность</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -287,6 +353,7 @@ import {
   Calendar,
 } from "lucide-vue-next";
 import { toast } from "vue-sonner";
+import { Switch } from "@/components/ui/switch";
 
 definePageMeta({
   layout: "admin",
@@ -303,6 +370,8 @@ const similarCases = ref([]);
 const isLoading = ref(false);
 const isDiagnosticsLoading = ref(false);
 const isDiagnosticsUploadProccessingLoading = ref(false);
+
+const showGradCam = ref(true);
 
 const fileInput = ref(null);
 
@@ -370,6 +439,8 @@ function handleImageUpload(event) {
   } else {
     alert("Пожалуйста, загрузите только изображения (JPG, PNG).");
   }
+
+  event.target.value = "";
 }
 
 async function newDiagnostic() {

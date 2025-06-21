@@ -22,6 +22,7 @@ class MedicalImage extends Model
         'confidence_score',
         'detected_features',
         'ai_suggestions',
+        'grad_cam_url',
         'status'
     ];
 

@@ -60,11 +60,23 @@ class MedicalImageController extends Controller
 
             $result = json_decode($response->getBody(), true);
 
+            // Сохраняем GradCAM
+            $gradcamBase64 = $result['gradcam'] ?? null;
+            $gradcamUrl = null;
+
+            if ($gradcamBase64) {
+                $gradcamData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $gradcamBase64));
+                $gradcamPath = 'gradcams/' . uniqid('gradcam_') . '.jpg';
+                Storage::disk('public')->put($gradcamPath, $gradcamData);
+                $gradcamUrl = $gradcamPath;
+            }
+
             $image->update([
-                'diagnosis' => $result['predicted_class'] ?? null,
-                'confidence_score' => $result['probability'] ?? 0,
-                'detected_features' => [$result['predicted_class'] ?? 'unknown'],
-                'ai_suggestions' => [($result['predicted_class'] ?? 'unknown')],
+                'diagnosis' => $result['top_class'] ?? null,
+                'confidence_score' => json_encode($result['probabilities'] ?? []),
+                'detected_features' => [$result['top_class'] ?? 'unknown'],
+                'ai_suggestions' => [$result['top_class'] ?? 'unknown'],
+                'grad_cam_url' => $gradcamUrl,
                 'status' => 'completed',
             ]);
         } catch (\Exception $e) {

@@ -5,8 +5,8 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
+from sklearn.metrics import classification_report, accuracy_score
 import matplotlib.pyplot as plt
-
 
 # Параметры
 BATCH_SIZE = 16
@@ -15,13 +15,13 @@ LEARNING_RATE = 0.001
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Пути к данным
-DATA_DIR = "chest_xray"  # Укажите путь к папке с данными
+DATA_DIR = "chest_xray"
 TRAIN_DIR = os.path.join(DATA_DIR, "train")
 VAL_DIR = os.path.join(DATA_DIR, "val")
 TEST_DIR = os.path.join(DATA_DIR, "test")
 
 
-# Модель (простая CNN)
+# Модель
 class PneumoniaNet(nn.Module):
     def __init__(self):
         super(PneumoniaNet, self).__init__()
@@ -42,7 +42,7 @@ class PneumoniaNet(nn.Module):
         return x
 
 
-# Трансформации для данных
+# Трансформации
 data_transforms = {
     "train": transforms.Compose(
         [
@@ -64,10 +64,11 @@ data_transforms = {
 # Загрузка данных
 train_dataset = datasets.ImageFolder(TRAIN_DIR, transform=data_transforms["train"])
 val_dataset = datasets.ImageFolder(VAL_DIR, transform=data_transforms["val"])
+test_dataset = datasets.ImageFolder(TEST_DIR, transform=data_transforms["val"])
 
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
-
+test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # Инициализация модели, функции потерь и оптимизатора
 model = PneumoniaNet().to(DEVICE)
@@ -75,7 +76,7 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
 
-# Функция для обучения
+# Обучение
 def train_model(model, train_loader, val_loader, criterion, optimizer, epochs):
     for epoch in range(epochs):
         model.train()
@@ -95,7 +96,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, epochs):
         )
 
 
-# Функция для валидации
+# Валидация
 def validate_model(model, val_loader, criterion):
     model.eval()
     val_loss = 0.0
@@ -113,8 +114,33 @@ def validate_model(model, val_loader, criterion):
     return val_loss, val_acc
 
 
-# Обучение модели
+# Тестирование и отчет классификации
+def evaluate_on_test_set(model, test_loader, class_names):
+    model.eval()
+    all_preds = []
+    all_labels = []
+
+    with torch.no_grad():
+        for inputs, labels in test_loader:
+            inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
+            outputs = model(inputs)
+            _, preds = torch.max(outputs, 1)
+            all_preds.extend(preds.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+
+    acc = accuracy_score(all_labels, all_preds) * 100
+    print("Точность модели:", acc)
+    print(
+        "Отчет классификации:\n",
+        classification_report(all_labels, all_preds, target_names=class_names),
+    )
+
+
+# Запуск
 train_model(model, train_loader, val_loader, criterion, optimizer, EPOCHS)
 
 # Сохранение модели
-torch.save(model.state_dict(), "pneumonia_mode312l.pth")
+torch.save(model.state_dict(), "pneumonia_model_prod.pth")
+
+# Оценка на тестовой выборке
+evaluate_on_test_set(model, test_loader, test_dataset.classes)

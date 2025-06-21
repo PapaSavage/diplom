@@ -27,7 +27,7 @@ class PneumoniaNet(nn.Module):
 
 # Загрузка модели
 model = PneumoniaNet()
-model.load_state_dict(torch.load("pneumonia_mode312l.pth"))
+model.load_state_dict(torch.load("pneumonia_model_prod.pth"))
 model.eval()
 
 # Подготовка нового изображения
