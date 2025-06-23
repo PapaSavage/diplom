@@ -1,13 +1,13 @@
 <template>
   <div class="grid grid-cols-4 gap-4">
-    <div class="col-span-4 md:col-span-2">
+    <div class="col-span-4 lg:col-span-2">
       <patients-list
         :global="false"
         :from="'diagnostics'"
         @patient-selected="onPatientSelected"
       />
     </div>
-    <div class="col-span-4 md:col-span-2" v-if="selectedPatient">
+    <div class="col-span-4 lg:col-span-2" v-if="selectedPatient">
       <Card class="w-full">
         <CardHeader>
           <CardTitle>Медицинские обследования</CardTitle>
